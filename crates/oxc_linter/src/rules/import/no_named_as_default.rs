@@ -169,6 +169,9 @@ fn test() {
         // When default and named exports are re-exported from different sources,
         // it should still report.
         r#"import userEvent from "./re-export-default-and-named-misleading""#,
+        // When default and named exports are re-exported through local aliases
+        // that map to different remote symbols, it should still report.
+        r#"import userEvent from "./re-export-default-and-named-alias-misleading""#,
     ];
 
     Tester::new(NoNamedAsDefault::NAME, NoNamedAsDefault::PLUGIN, pass, fail)
