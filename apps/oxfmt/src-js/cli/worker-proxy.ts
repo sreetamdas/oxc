@@ -31,21 +31,18 @@ export async function disposeExternalFormatter(): Promise<void> {
 
 export async function formatEmbeddedCode(
   options: Options,
-  parserName: string,
   code: string,
 ): Promise<string> {
-  return pool!.run({ options, code, parserName } satisfies FormatEmbeddedCodeParam, {
+  return pool!.run({ options, code } satisfies FormatEmbeddedCodeParam, {
     name: "formatEmbeddedCode",
   });
 }
 
 export async function formatFile(
   options: Options,
-  parserName: string,
-  fileName: string,
   code: string,
 ): Promise<string> {
-  return pool!.run({ options, code, fileName, parserName } satisfies FormatFileParam, {
+  return pool!.run({ options, code } satisfies FormatFileParam, {
     name: "formatFile",
   });
 }
