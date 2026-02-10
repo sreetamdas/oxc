@@ -130,14 +130,31 @@ fn default_and_named_are_same_reexport(remote_module_record: &ModuleRecord, name
         return false;
     }
 
-    // Both must import the same identifier from that module
+    // Both must import the same identifier from that module.
     let (ExportImportName::Name(default_import), ExportImportName::Name(named_import)) =
         (&default_entry.import_name, &named_entry.import_name)
     else {
         return false;
     };
 
-    default_import.name() == named_import.name()
+    // For direct re-exports (`export { foo as default } from './source'`), the import_name
+    // directly reflects the source binding name and can be compared as-is.
+    //
+    // For import-then-export (`import foo from './source'; export { foo as default }`),
+    // the parser sets import_name to the local name ("foo") rather than "default".
+    // In that case the import_name is unreliable, so we resolve the actual source name
+    // by checking the remote module's import entries.
+    let default_source_name = remote_module_record
+        .import_entries
+        .iter()
+        .find(|entry| {
+            entry.import_name.is_default()
+                && entry.module_request.name() == default_module.name()
+                && entry.local_name.name() == default_import.name()
+        })
+        .map_or(default_import.name(), |_| "default");
+
+    default_source_name == named_import.name()
 }
 
 #[test]

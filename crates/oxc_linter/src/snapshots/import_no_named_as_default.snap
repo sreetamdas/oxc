@@ -36,3 +36,10 @@ source: crates/oxc_linter/src/tester.rs
    ·        ─────────
    ╰────
   help: Using default import as "userEvent" can be confusing. Use another name for default import to avoid confusion.
+
+  ⚠ eslint-plugin-import(no-named-as-default): Module "./re-export-default-and-named-alias-misleading" has named export "userEvent"
+   ╭─[index.js:1:8]
+ 1 │ import userEvent from "./re-export-default-and-named-alias-misleading"
+   ·        ─────────
+   ╰────
+  help: Using default import as "userEvent" can be confusing. Use another name for default import to avoid confusion.
