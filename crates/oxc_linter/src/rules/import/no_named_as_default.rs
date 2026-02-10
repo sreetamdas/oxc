@@ -173,6 +173,9 @@ fn test() {
         r#"import userEvent from "./re-export-default-and-named""#,
         // Also allowed.
         r#"import { userEvent } from "./re-export-default-and-named""#,
+        // Import-then-export of the same named binding as both default and named.
+        // Both refer to the same source binding, so this is allowed.
+        r#"import userEvent from "./re-export-default-and-named-import-then-export""#,
     ];
 
     let fail = vec![
@@ -189,6 +192,9 @@ fn test() {
         // When default and named exports are re-exported through local aliases
         // that map to different remote symbols, it should still report.
         r#"import userEvent from "./re-export-default-and-named-alias-misleading""#,
+        // When default and named exports are re-exported from the same source
+        // but refer to different bindings, it should still report.
+        r#"import userEvent from "./re-export-default-and-named-different-binding""#,
     ];
 
     Tester::new(NoNamedAsDefault::NAME, NoNamedAsDefault::PLUGIN, pass, fail)
