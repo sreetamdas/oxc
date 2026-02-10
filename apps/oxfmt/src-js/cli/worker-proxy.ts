@@ -29,19 +29,13 @@ export async function disposeExternalFormatter(): Promise<void> {
   pool = null;
 }
 
-export async function formatEmbeddedCode(
-  options: Options,
-  code: string,
-): Promise<string> {
+export async function formatEmbeddedCode(options: Options, code: string): Promise<string> {
   return pool!.run({ options, code } satisfies FormatEmbeddedCodeParam, {
     name: "formatEmbeddedCode",
   });
 }
 
-export async function formatFile(
-  options: Options,
-  code: string,
-): Promise<string> {
+export async function formatFile(options: Options, code: string): Promise<string> {
   return pool!.run({ options, code } satisfies FormatFileParam, {
     name: "formatFile",
   });

@@ -84,10 +84,7 @@ export type FormatFileParam = {
  *
  * @returns Formatted code
  */
-export async function formatFile({
-  code,
-  options,
-}: FormatFileParam): Promise<string> {
+export async function formatFile({ code, options }: FormatFileParam): Promise<string> {
   const prettier = await loadPrettier();
 
   // Enable Tailwind CSS plugin for non-JS files if needed
