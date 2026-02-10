@@ -144,7 +144,7 @@ export interface SortTailwindClassesArgs {
 
 /**
  * Process Tailwind CSS classes found in JS/TS files in batch.
- * @param args - Object containing filepath, classes, and options
+ * @param args - Object containing classes and options (filepath is in options.filepath)
  * @returns Array of sorted class strings (same order/length as input)
  */
 export async function sortTailwindClasses({
