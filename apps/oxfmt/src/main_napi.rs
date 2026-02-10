@@ -42,7 +42,7 @@ pub async fn run_cli(
     #[napi(ts_arg_type = "(options: Record<string, any>, code: string) => Promise<string>")]
     format_file_cb: JsFormatFileCb,
     #[napi(
-        ts_arg_type = "(filepath: string, options: Record<string, any>, classes: string[]) => Promise<string[]>"
+        ts_arg_type = "(options: Record<string, any>, classes: string[]) => Promise<string[]>"
     )]
     sort_tailwindcss_classes_cb: JsSortTailwindClassesCb,
 ) -> (String, Option<u8>) {
@@ -145,7 +145,7 @@ pub async fn format(
     #[napi(ts_arg_type = "(options: Record<string, any>, code: string) => Promise<string>")]
     format_file_cb: JsFormatFileCb,
     #[napi(
-        ts_arg_type = "(filepath: string, options: Record<string, any>, classes: string[]) => Promise<string[]>"
+        ts_arg_type = "(options: Record<string, any>, classes: string[]) => Promise<string[]>"
     )]
     sort_tailwind_classes_cb: JsSortTailwindClassesCb,
 ) -> FormatResult {

@@ -132,14 +132,14 @@ async function setupTailwindPlugin(options: Options): Promise<void> {
 // ---
 
 export interface SortTailwindClassesArgs {
-  filepath: string;
   classes: string[];
-  options?: {
+  options: {
+    filepath?: string;
     tailwindStylesheet?: string;
     tailwindConfig?: string;
     tailwindPreserveWhitespace?: boolean;
     tailwindPreserveDuplicates?: boolean;
-  } & Options;
+  };
 }
 
 /**
@@ -148,14 +148,13 @@ export interface SortTailwindClassesArgs {
  * @returns Array of sorted class strings (same order/length as input)
  */
 export async function sortTailwindClasses({
-  filepath,
   classes,
-  options = {},
+  options,
 }: SortTailwindClassesArgs): Promise<string[]> {
   const { createSorter } = await import("prettier-plugin-tailwindcss/sorter");
 
   const sorter = await createSorter({
-    filepath,
+    filepath: options.filepath,
     stylesheetPath: options.tailwindStylesheet,
     configPath: options.tailwindConfig,
     preserveWhitespace: options.tailwindPreserveWhitespace,
