@@ -650,6 +650,8 @@ struct TsGoLintDiagnosticPayload {
     pub fixes: Vec<Fix>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub suggestions: Vec<Suggestion>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub labeled_ranges: Vec<LabeledRange>,
 }
 
 /// Represents the error payload from `tsgolint`.
@@ -677,6 +679,7 @@ pub struct TsGoLintRuleDiagnostic {
     pub message: RuleMessage,
     pub fixes: Vec<Fix>,
     pub suggestions: Vec<Suggestion>,
+    pub labeled_ranges: Vec<LabeledRange>,
     pub file_path: PathBuf,
 }
 
@@ -704,11 +707,20 @@ impl From<TsGoLintDiagnostic> for OxcDiagnostic {
 impl From<TsGoLintRuleDiagnostic> for OxcDiagnostic {
     fn from(val: TsGoLintRuleDiagnostic) -> Self {
         let mut d = OxcDiagnostic::warn(val.message.description)
-            .with_label(val.span)
             .with_url(format!("{}/{}/{}.html", WEBSITE_BASE_RULES_URL, "typescript", val.rule))
             .with_error_code("typescript-eslint", val.rule);
         if let Some(help) = val.message.help {
             d = d.with_help(help);
+        }
+        if val.labeled_ranges.is_empty() {
+            d = d.with_label(val.span);
+        } else {
+            let labels = val
+                .labeled_ranges
+                .into_iter()
+                .map(|lr| Span::new(lr.range.pos, lr.range.end).label(lr.label));
+            d = d.with_labels(labels);
+            d = d.and_label(val.span.primary());
         }
         d
     }
@@ -795,6 +807,12 @@ pub struct Fix {
 pub struct Suggestion {
     pub message: RuleMessage,
     pub fixes: Vec<Fix>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct LabeledRange {
+    pub label: String,
+    pub range: Range,
 }
 
 #[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize)]
@@ -1106,6 +1124,7 @@ fn parse_single_message(
                     message: diagnostic_payload.message,
                     fixes: diagnostic_payload.fixes,
                     suggestions: diagnostic_payload.suggestions,
+                    labeled_ranges: diagnostic_payload.labeled_ranges,
                     file_path: PathBuf::from(
                         diagnostic_payload
                             .file_path
@@ -1201,7 +1220,7 @@ mod test {
 
     use crate::{
         fixer::{FixKind, Message, PossibleFixes},
-        tsgolint::{Fix, Range, RuleMessage, Suggestion, TsGoLintRuleDiagnostic},
+        tsgolint::{Fix, LabeledRange, Range, RuleMessage, Suggestion, TsGoLintRuleDiagnostic},
     };
 
     #[test]
@@ -1216,6 +1235,7 @@ mod test {
             },
             fixes: vec![],
             suggestions: vec![],
+            labeled_ranges: vec![],
             file_path: "some/file/path".into(),
         };
 
@@ -1250,6 +1270,7 @@ mod test {
                 Fix { text: "hello".into(), range: Range { pos: 5, end: 10 } },
             ],
             suggestions: vec![],
+            labeled_ranges: vec![],
             file_path: "some/file/path".into(),
         };
 
@@ -1299,6 +1320,7 @@ mod test {
                     ],
                 },
             ],
+            labeled_ranges: vec![],
             file_path: "some/file/path".into(),
         };
 
@@ -1342,6 +1364,7 @@ mod test {
                 },
                 fixes: vec![Fix { text: "Suggestion 1".into(), range: Range { pos: 0, end: 5 } }],
             }],
+            labeled_ranges: vec![],
             file_path: "some/file/path".into(),
         };
 
@@ -1365,6 +1388,34 @@ mod test {
                 },
             ])
         );
+    }
+
+    #[test]
+    fn test_message_from_tsgo_lint_diagnostic_with_labeled_ranges() {
+        let diagnostic = TsGoLintRuleDiagnostic {
+            span: Span::new(0, 10),
+            rule: "some_rule".into(),
+            message: RuleMessage {
+                id: "some_id".into(),
+                description: "Some description".into(),
+                help: None,
+            },
+            fixes: vec![],
+            suggestions: vec![],
+            labeled_ranges: vec![
+                LabeledRange { label: "Label 1".into(), range: Range { pos: 0, end: 5 } },
+                LabeledRange { label: "Label 2".into(), range: Range { pos: 5, end: 10 } },
+            ],
+            file_path: "some/file/path".into(),
+        };
+
+        let message = Message::from_tsgo_lint_diagnostic(diagnostic, "Some text over 10 bytes.");
+
+        assert!(message.error.labels.is_some());
+        let labels = message.error.labels.as_ref().unwrap();
+        assert_eq!(labels.len(), 3);
+        assert_eq!(labels[0], LabeledSpan::new(Some("Label 1".into()), 0, 5));
+        assert_eq!(labels[1], LabeledSpan::new(Some("Label 2".into()), 5, 5));
     }
 
     #[test]
